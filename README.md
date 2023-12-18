@@ -10,6 +10,10 @@
 pip install streamlit
 ```
 
+```bash
+pip install pandas
+```
+
 ## Run
 
   ```bash
