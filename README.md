@@ -6,12 +6,12 @@
 * Python 3.8 - 3.12
 * PIP
 
-  ```
-  pip install streamlit
+```bash
+pip install streamlit
 ```
 
 ## Run
 
-  ```
+  ```bash
   streamlit run main.py
 ```
