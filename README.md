@@ -1,5 +1,13 @@
 # mortgageCalculator
 
+## Description
+
+For this project, the Python libraries I used are Streamlit and pandas.
+
+https://docs.streamlit.io/
+
+https://pandas.pydata.org/
+
 ## Prerequisites
 
 * IDE or text editor
