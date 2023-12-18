@@ -1,52 +1,62 @@
 import streamlit as st
 import pandas as pd
-import numpy as np
 
 st.header("Mortgage Amortization Schedule")
 
-principalLoanAmount = st.number_input("Total Loan Amount: ")
-loanLength = st.number_input("Length of Loan (in years): ") * 12.0
-interestRate = ((st.number_input("Interest Rate: ")) / 100) / 12
+principalLoanAmount = st.number_input("Total Loan Amount: ") # user input for the amount needed for the loan
+loanLength = st.number_input("Length of Loan (in years): ") * 12.0 # user input for the time length of the loan
+interestRate = ((st.number_input("Interest Rate: ")) / 100) / 12 # user input for the interest rate
 
-if (((1 + (interestRate / 12)) ** loanLength) - 1) != 0:
-    monthlyPayment = principalLoanAmount * ((interestRate * (1 + interestRate) ** loanLength) / (((1 + interestRate) ** loanLength) - 1))
+if (((1 + (interestRate / 12)) ** loanLength) - 1) != 0: # makes sure division by 0 does not occur
+    monthlyPayment = principalLoanAmount * ((interestRate * (1 + interestRate) ** loanLength) / (((1 + interestRate) ** loanLength) - 1)) # mortgage payment equation
 else:
-    monthlyPayment = 0
+    if loanLength != 0: # makes sure division by 0 does not occur
+        monthlyPayment = principalLoanAmount / loanLength
+    else:
+        monthlyPayment = 0
 
-listRows = []
-
-MTDprincipalCount = 0
+MTDprincipalCount = 0 # these all keep track of the current count
 MTDinterestCount = 0
+MTDtotalCount = 0
+principalLoanAmountCount = principalLoanAmount
 
-remainingPrincipalBalance = []
-principalPerMonth = []
-interestPerMonth = []
-paymentPerMonth = []
-MTDprincipal = []
-MTDinterest = []
-MTDtotal = []
+listRows = [] # this causes the row names to be Month: num
+remainingPrincipalBalance = [] # this keeps track of the remaining principal balance
+principalPerMonth = [] # this keeps track of how much of the monthly payment is towards the principal balance
+interestPerMonth = [] # this keeps track of how much of the monthly payment is towards interest
+MTDprincipal = [] # this keeps track of the month to date principal payments
+MTDinterest = [] # this keeps track of the month to date interest payments
+MTDtotal = [] # this keeps track of the month to date total payments
 
-for l in range(int(loanLength)):
+for l in range(int(loanLength)): # loops through each month
 
-    listRows.append("Month: " + str(l + 1))
+    listRows.append("Month: " + str(l + 1)) # row names
 
-    interestPerMonth.append(principalLoanAmount * interestRate)
-    principalPerMonth.append(monthlyPayment - (interestPerMonth[l]))
-    paymentPerMonth.append(monthlyPayment)
+    interestPerMonth.append(principalLoanAmountCount * interestRate) # interest monthly payment
+    principalPerMonth.append(monthlyPayment - (interestPerMonth[l])) # principal monthly payment
 
-    principalLoanAmount = principalLoanAmount - principalPerMonth[l]
-    remainingPrincipalBalance.append(principalLoanAmount)
+    principalLoanAmountCount = principalLoanAmountCount - principalPerMonth[l] # remaining principal balance to be paid
+    remainingPrincipalBalance.append(principalLoanAmountCount)
     
-    MTDprincipalCount = MTDprincipalCount + principalPerMonth[l]
+    MTDprincipalCount = MTDprincipalCount + principalPerMonth[l] # month to date principal payments
     MTDprincipal.append(MTDprincipalCount)
 
-    MTDinterestCount = MTDinterestCount + interestPerMonth[l]
+    MTDinterestCount = MTDinterestCount + interestPerMonth[l] # month to date interest payments
     MTDinterest.append(MTDinterestCount)
 
-dfTable = pd.DataFrame(
-    {"Remaining Principal Balance": remainingPrincipalBalance, "Monthly Payment": paymentPerMonth, "Monthly Principal": principalPerMonth, "Monthly Interest": interestPerMonth}
+    MTDtotalCount = MTDtotalCount + monthlyPayment # month to date payments
+    MTDtotal.append(MTDtotalCount)
+
+table = pd.DataFrame( # data frame for the table
+    {"Remaining Principal Balance": remainingPrincipalBalance, "Monthly Payment": monthlyPayment, "Monthly Principal": principalPerMonth, "Monthly Interest": interestPerMonth},
 )
 
-dfTable.index = listRows
+table.index = listRows
 
-st.table(dfTable)
+graph = pd.DataFrame( # data frame for the graph
+    {"MTD Total": MTDtotal, "MTD Principal": MTDprincipal, "MTD Interest": MTDinterest, "Initial Loan Amount": principalLoanAmount}
+)
+
+st.line_chart(graph)
+
+st.table(table)
