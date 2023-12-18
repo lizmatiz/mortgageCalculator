@@ -5,7 +5,7 @@ st.header("Mortgage Amortization Schedule")
 
 principalLoanAmount = st.number_input("Total Loan Amount: ") # user input for the amount needed for the loan
 loanLength = st.number_input("Length of Loan (in years): ") * 12.0 # user input for the time length of the loan
-interestRate = ((st.number_input("Interest Rate: ")) / 100) / 12 # user input for the interest rate
+interestRate = ((st.number_input("Interest Rate (yearly): ")) / 100) / 12 # user input for the interest rate
 
 if (((1 + (interestRate / 12)) ** loanLength) - 1) != 0: # makes sure division by 0 does not occur
     monthlyPayment = principalLoanAmount * ((interestRate * (1 + interestRate) ** loanLength) / (((1 + interestRate) ** loanLength) - 1)) # mortgage payment equation
@@ -47,11 +47,6 @@ for l in range(int(loanLength)): # loops through each month
     MTDtotalCount = MTDtotalCount + monthlyPayment # month to date payments
     MTDtotal.append(MTDtotalCount)
 
-table = pd.DataFrame( # data frame for the table
-    {"Remaining Principal Balance": remainingPrincipalBalance, "Monthly Payment": monthlyPayment, "Monthly Principal": principalPerMonth, "Monthly Interest": interestPerMonth},
-)
-
-table.index = listRows
 
 graph = pd.DataFrame( # data frame for the graph
     {"MTD Total": MTDtotal, "MTD Principal": MTDprincipal, "MTD Interest": MTDinterest, "Initial Loan Amount": principalLoanAmount}
@@ -59,4 +54,11 @@ graph = pd.DataFrame( # data frame for the graph
 
 st.line_chart(graph)
 
-st.table(table)
+table = pd.DataFrame( # data frame for the table
+    {"Month": listRows, "Remaining Balance": remainingPrincipalBalance, "Monthly Payment": monthlyPayment, "Monthly Principal": principalPerMonth, "Monthly Interest": interestPerMonth}
+)
+
+st.data_editor( # edits the numbers in the table
+    table, column_config = {"Remaining Balance": st.column_config.NumberColumn(format="$ %.2f"), "Monthly Payment": st.column_config.NumberColumn(format="$ %.2f"), "Monthly Principal": st.column_config.NumberColumn(format="$ %.2f"), "Monthly Interest": st.column_config.NumberColumn(format="$ %.2f")},
+    hide_index=True,
+)
