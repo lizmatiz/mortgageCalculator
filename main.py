@@ -9,9 +9,10 @@ st.header("Mortgage Amortization Schedule")
 
 def getUserInput():
     loanRequest = {}
-    loanRequest["principalLoanAmount"] = (st.number_input("Total Loan Amount: ")) # user input for the amount needed for the loan
-    loanRequest["loanLength"] = (st.number_input("Length of Loan (in years): ") * 12.0) # user input for the time length of the loan
-    loanRequest["interestRate"] = (((st.number_input("Interest Rate (yearly): ")) / 100) / 12) # user input for the interest rate
+    loanRequest["principalLoanAmount"] = (st.number_input("Total Loan Amount: ", key="principalLoanAmount")) # user input for the amount needed for the loan
+    loanRequest["loanLength"] = (st.number_input("Length of Loan (in years): ", key = "lengthOfLoan") * 12.0) # user input for the time length of the loan
+    loanRequest["interestRate"] = (((st.number_input("Interest Rate (yearly): ", key = "interestRate")) / 100) / 12) # user input for the interest rate
+
     return loanRequest
 
 
@@ -25,16 +26,8 @@ def calculateMonthlyPayment(loanRequest: dict):
             loanRequest["monthlyPayment"] = 0
     return loanRequest
 
-def main():
-    loanRequest = getUserInput()
-    loanRequest = calculateMonthlyPayment(loanRequest)
-
-    MTDprincipalCount = 0 # these all keep track of the current count
-    MTDinterestCount = 0
-    MTDtotalCount = 0
-    principalLoanAmountCount = loanRequest["principalLoanAmount"]
-
-
+def createDataFrames(loanRequest: dict):
+    df = {}
     listRows = [] # this causes the row names to be Month: num
     remainingPrincipalBalance = [] # this keeps track of the remaining principal balance
     principalPerMonth = [] # this keeps track of how much of the monthly payment is towards the principal balance
@@ -42,6 +35,11 @@ def main():
     MTDprincipal = [] # this keeps track of the month to date principal payments
     MTDinterest = [] # this keeps track of the month to date interest payments
     MTDtotal = [] # this keeps track of the month to date total payments
+
+    MTDprincipalCount = 0 # these all keep track of the current count
+    MTDinterestCount = 0
+    MTDtotalCount = 0
+    principalLoanAmountCount = loanRequest["principalLoanAmount"]
 
     for l in range(int(loanRequest["loanLength"])): # loops through each month
 
@@ -63,16 +61,14 @@ def main():
         MTDtotal.append(MTDtotalCount)
 
 
-    graph = pd.DataFrame( # data frame for the graph
+    df["graph"] = pd.DataFrame( # data frame for the graph
         {"MTD Total": MTDtotal,
         "MTD Principal": MTDprincipal,
         "MTD Interest": MTDinterest,
         "Initial Loan Amount": loanRequest["principalLoanAmount"]}
     )
 
-    st.line_chart(graph)
-
-    table = pd.DataFrame( # data frame for the table
+    df["table"] = pd.DataFrame( # data frame for the table
         {"Month": listRows,
         "Remaining Balance": remainingPrincipalBalance,
         "Monthly Payment": loanRequest["monthlyPayment"],
@@ -80,8 +76,13 @@ def main():
         "Monthly Interest": interestPerMonth}
     )
 
+    return df
+
+def display(df: dict):
+    st.line_chart(df["graph"])
+
     st.dataframe( # edits the numbers in the table
-        table,
+        df["table"],
         width=800,
         column_config = {"Remaining Balance": st.column_config.NumberColumn(format="$ %.2f"),
                         "Monthly Payment": st.column_config.NumberColumn(format="$ %.2f"),
@@ -89,6 +90,15 @@ def main():
                         "Monthly Interest": st.column_config.NumberColumn(format="$ %.2f")},
         hide_index=True,
     )
+
+def main():
+    loanRequest = getUserInput()
+    loanRequest = calculateMonthlyPayment(loanRequest)
+    df = createDataFrames(loanRequest)
+    if(loanRequest["principalLoanAmount"] > 0 and loanRequest["loanLength"] > 0):
+        display(df)
+    else:
+        st.write("Invalid input! Try again with numbers greater than 0 for \"Total Loan Amount\" and \"Length of Loan\"")
 
 if __name__ == "__main__":
     main()
