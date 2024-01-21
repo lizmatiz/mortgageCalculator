@@ -1,20 +1,18 @@
 import streamlit as st
-import pandas as pd
 
-st.set_page_config(layout="centered", 
-                   page_title="Mortgage Calculator",
-                   page_icon="https://media.istockphoto.com/id/1369053959/vector/house.jpg?s=612x612&w=0&k=20&c=iA7YgnbjMT89OD8WDtINPoD6p4-sY-GVp1Tt0YdeqxA=")
+st.set_page_config(layout = "centered", 
+                   page_title = "Mortgage Calculator",
+                   page_icon = "https://media.istockphoto.com/id/1369053959/vector/house.jpg?s=612x612&w=0&k=20&c=iA7YgnbjMT89OD8WDtINPoD6p4-sY-GVp1Tt0YdeqxA=")
 
 st.header("Mortgage Amortization Schedule")
 
 def getUserInput():
     loanRequest = {}
-    loanRequest["principalLoanAmount"] = (st.number_input("Total Loan Amount: ", key="principalLoanAmount")) # user input for the amount needed for the loan
-    loanRequest["loanLength"] = (st.number_input("Length of Loan (in years): ", key = "lengthOfLoan") * 12.0) # user input for the time length of the loan
+    loanRequest["principalLoanAmount"] = (st.number_input("Total Loan Amount: ", key = "principalLoanAmount", min_value = 1)) # user input for the amount needed for the loan
+    loanRequest["loanLength"] = (st.number_input("Length of Loan (in years): ", key = "lengthOfLoan", min_value = 1) * 12.0) # user input for the time length of the loan
     loanRequest["interestRate"] = (((st.number_input("Interest Rate (yearly): ", key = "interestRate")) / 100) / 12) # user input for the interest rate
 
     return loanRequest
-
 
 def calculateMonthlyPayment(loanRequest: dict):
     if (((1 + (loanRequest["interestRate"] / 12)) ** loanRequest["loanLength"]) - 1) != 0: # makes sure division by 0 does not occur
@@ -24,10 +22,11 @@ def calculateMonthlyPayment(loanRequest: dict):
             loanRequest["monthlyPayment"] = ((loanRequest)["principalLoanAmount"] / loanRequest["loanLength"])
         else:
             loanRequest["monthlyPayment"] = 0
+
     return loanRequest
 
-def createDataFrames(loanRequest: dict):
-    df = {}
+def createFinalDicts(loanRequest: dict):
+    d = {} # return this at the end
     listRows = [] # this causes the row names to be Month: num
     remainingPrincipalBalance = [] # this keeps track of the remaining principal balance
     principalPerMonth = [] # this keeps track of how much of the monthly payment is towards the principal balance
@@ -60,15 +59,14 @@ def createDataFrames(loanRequest: dict):
         MTDtotalCount = MTDtotalCount + loanRequest["monthlyPayment"] # month to date payments
         MTDtotal.append(MTDtotalCount)
 
-
-    df["graph"] = pd.DataFrame( # data frame for the graph
+    graph = ( # dict for the graph
         {"MTD Total": MTDtotal,
         "MTD Principal": MTDprincipal,
         "MTD Interest": MTDinterest,
         "Initial Loan Amount": loanRequest["principalLoanAmount"]}
     )
 
-    df["table"] = pd.DataFrame( # data frame for the table
+    table = ( # dict for the table
         {"Month": listRows,
         "Remaining Balance": remainingPrincipalBalance,
         "Monthly Payment": loanRequest["monthlyPayment"],
@@ -76,29 +74,28 @@ def createDataFrames(loanRequest: dict):
         "Monthly Interest": interestPerMonth}
     )
 
-    return df
+    d["graph"] = graph
+    d["table"] = table
+    return d
 
 def display(df: dict):
     st.line_chart(df["graph"])
 
     st.dataframe( # edits the numbers in the table
         df["table"],
-        width=800,
-        column_config = {"Remaining Balance": st.column_config.NumberColumn(format="$ %.2f"),
-                        "Monthly Payment": st.column_config.NumberColumn(format="$ %.2f"),
-                        "Monthly Principal": st.column_config.NumberColumn(format="$ %.2f"),
-                        "Monthly Interest": st.column_config.NumberColumn(format="$ %.2f")},
-        hide_index=True,
+        width = 800,
+        column_config = {"Remaining Balance": st.column_config.NumberColumn(format = "$ %.2f"),
+                        "Monthly Payment": st.column_config.NumberColumn(format = "$ %.2f"),
+                        "Monthly Principal": st.column_config.NumberColumn(format = "$ %.2f"),
+                        "Monthly Interest": st.column_config.NumberColumn(format = "$ %.2f")},
+        hide_index = True,
     )
 
 def main():
     loanRequest = getUserInput()
     loanRequest = calculateMonthlyPayment(loanRequest)
-    df = createDataFrames(loanRequest)
-    if(loanRequest["principalLoanAmount"] > 0 and loanRequest["loanLength"] > 0):
-        display(df)
-    else:
-        st.write("Invalid input! Try again with numbers greater than 0 for \"Total Loan Amount\" and \"Length of Loan\"")
+    d = createFinalDicts(loanRequest)
+    display(d)
 
 if __name__ == "__main__":
     main()

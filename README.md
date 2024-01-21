@@ -2,11 +2,9 @@
 
 ## Description
 
-For this project, the Python libraries I used are Streamlit and pandas.
+For this project, the Python library I used is Streamlit.
 
 https://docs.streamlit.io/
-
-https://pandas.pydata.org/
 
 ## Prerequisites
 
@@ -16,10 +14,6 @@ https://pandas.pydata.org/
 
 ```bash
 pip install streamlit
-```
-
-```bash
-pip install pandas
 ```
 
 ## Run
